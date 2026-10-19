@@ -155,6 +155,17 @@ h1, h2, h3, p { margin: 0; }
 .top-result .art { width: 92px; border-radius: 8px; }
 .top-result h3 { font-size: 20px; font-weight: 800; margin-top: 12px; line-height: 1.3; }
 .top-result p { color: var(--sub); font-size: 14px; margin-top: 2px; }
+.search-playlists { padding-top: 20px; }
+.playlist-search-grid { display: flex; gap: 14px; overflow-x: auto; padding: 0 var(--gutter) 4px; scrollbar-width: none; }
+.playlist-search-grid::-webkit-scrollbar { display: none; }
+.playlist-search-card { flex: 0 0 154px; min-width: 0; text-align: start; display: block; }
+.playlist-search-card:disabled { opacity: .65; }
+.playlist-search-art { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 8px; background: var(--tile); margin-bottom: 8px; }
+.playlist-search-art::after { content: "قائمة"; position: absolute; inset-inline-start: 7px; bottom: 7px; padding: 2px 7px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-size: 11px; font-weight: 700; }
+.playlist-search-art img { width: 100%; height: 100%; object-fit: cover; }
+.playlist-search-card strong { display: block; font-size: 14px; line-height: 1.35; }
+.playlist-search-card .muted { display: block; color: var(--sub); font-size: 12px; margin-top: 3px; }
+.playlist-search-loading { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.55); color: var(--green); font-size: 28px; z-index: 2; }
 
 /* ---------------- track rows ---------------- */
 .track-list { padding: 4px 0; }

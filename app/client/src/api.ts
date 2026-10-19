@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { API_BASE } from "./config";
-import type { Track } from "./types";
+import type { PlaylistSearchResult, Track } from "./types";
 
 export type PlaylistData = { id: string; title: string; tracks: Track[] };
 
@@ -76,6 +76,11 @@ export const api = {
       }
     }
   },
+  searchPlaylists: (q: string, limit = 8, signal?: AbortSignal) =>
+    getJson<PlaylistSearchResult[]>(
+      `/api/search-playlists?q=${encodeURIComponent(q)}&limit=${limit}`,
+      signal
+    ),
   playlist: (idOrUrl: string) =>
     withLegacy(
       () => getJson<PlaylistData>(`/api/playlist?id=${encodeURIComponent(idOrUrl)}`),
@@ -145,6 +150,14 @@ export function useSearch(query: string | null, limit = 12, enabled = true) {
   return useAsync<Track[]>(
     query ? `search:${query}:${limit}` : null,
     () => api.search(query as string, limit),
+    enabled
+  );
+}
+
+export function usePlaylistSearch(query: string | null, limit = 8, enabled = true) {
+  return useAsync<PlaylistSearchResult[]>(
+    query ? `search-playlists:${query}:${limit}` : null,
+    () => api.searchPlaylists(query as string, limit),
     enabled
   );
 }

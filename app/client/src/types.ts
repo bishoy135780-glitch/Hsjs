@@ -9,6 +9,15 @@ export type Track = {
   url: string;
 };
 
+export type PlaylistSearchResult = {
+  id: string;
+  title: string;
+  channel: string;
+  videoCount: string;
+  thumbnail: string;
+  url: string;
+};
+
 export type Playlist = {
   id: string;
   name: string;

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { getPlaylist, searchYouTube, suggest } from "./youtube.js";
+import { getPlaylist, searchPlaylists, searchYouTube, suggest } from "./youtube.js";
 
 function cors(res: ServerResponse) {
   // The Android app (https://localhost) calls this API cross-origin.
@@ -62,6 +62,13 @@ export default async function handleApi(
       if (!q || q.length > 120) return send(res, 400, { error: "q is required (max 120 chars)" });
       const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 12, 1), 30);
       return send(res, 200, await searchYouTube(q, limit), PUBLIC_CACHE);
+    }
+
+    if (route === "search-playlists") {
+      const q = (url.searchParams.get("q") ?? "").trim();
+      if (!q || q.length > 120) return send(res, 400, { error: "q is required (max 120 chars)" });
+      const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 8, 1), 12);
+      return send(res, 200, await searchPlaylists(q, limit), PUBLIC_CACHE);
     }
 
     if (route === "playlist") {

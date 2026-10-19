@@ -21,6 +21,15 @@ export type PlaylistData = {
   tracks: Track[];
 };
 
+export type PlaylistSearchResult = {
+  id: string;
+  title: string;
+  channel: string;
+  videoCount: string;
+  thumbnail: string;
+  url: string;
+};
+
 const BASE = "https://www.youtube.com/youtubei/v1";
 export const SEARCH_URL = `${BASE}/search?prettyPrint=false`;
 export const BROWSE_URL = `${BASE}/browse?prettyPrint=false`;
@@ -73,6 +82,15 @@ function pickThumbnail(item: Json, id: string): string {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 }
 
+function pickPlaylistThumbnail(item: Json, id: string): string {
+  const thumbs = (item.thumbnails as Array<{ thumbnails?: Array<{ url?: string }> }> | undefined)
+    ?.flatMap(group => group.thumbnails ?? []);
+  const url = thumbs?.at(-1)?.url;
+  return typeof url === "string" && url.startsWith("http")
+    ? url
+    : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}
+
 function toTrack(item: Json, channelKeys: string[]): Track | null {
   const id = typeof item.videoId === "string" ? item.videoId : "";
   if (!/^[\w-]{11}$/.test(id)) return null;
@@ -107,6 +125,28 @@ export function parseSearch(data: unknown, limit: number): Track[] {
     if (tracks.length >= limit) break;
   }
   return tracks;
+}
+
+export function parseSearchPlaylists(data: unknown, limit: number): PlaylistSearchResult[] {
+  const playlists: PlaylistSearchResult[] = [];
+  const seen = new Set<string>();
+  for (const item of findAll(data, "playlistRenderer")) {
+    const id = typeof item.playlistId === "string" ? item.playlistId : "";
+    if (!/^[\w-]{10,64}$/.test(id) || seen.has(id)) continue;
+    const title = textFrom(item.title).trim();
+    if (!title) continue;
+    seen.add(id);
+    playlists.push({
+      id,
+      title,
+      channel: textFrom(item.longBylineText) || textFrom(item.shortBylineText) || "",
+      videoCount: textFrom(item.videoCountText),
+      thumbnail: pickPlaylistThumbnail(item, id),
+      url: `https://www.youtube.com/playlist?list=${id}`,
+    });
+    if (playlists.length >= limit) break;
+  }
+  return playlists;
 }
 
 export function parsePlaylist(data: unknown, id: string, limit = 200): PlaylistData {
@@ -184,6 +224,14 @@ export function searchYouTube(query: string, limit = 12): Promise<Track[]> {
   return cached(`s:${q.toLowerCase()}:${limit}`, 10 * 60_000, async () => {
     const data = await post(SEARCH_URL, { context: context(), query: q });
     return parseSearch(data, limit);
+  });
+}
+
+export function searchPlaylists(query: string, limit = 8): Promise<PlaylistSearchResult[]> {
+  const q = query.trim();
+  return cached(`sp:${q.toLowerCase()}:${limit}`, 10 * 60_000, async () => {
+    const data = await post(SEARCH_URL, { context: context(), query: q });
+    return parseSearchPlaylists(data, limit);
   });
 }
 

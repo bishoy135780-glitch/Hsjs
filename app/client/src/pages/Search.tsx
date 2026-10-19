@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { api, useAsync, useSearch } from "../api";
+import { api, useAsync, usePlaylistSearch, useSearch } from "../api";
 import { categories, type Category } from "../catalog";
 import { Art } from "../components/Art";
 import { ErrorBox } from "../components/Shelf";
@@ -40,6 +40,8 @@ export default function Search() {
     editing
   );
   const results = useSearch(q || null, 24, Boolean(q));
+  const playlistResults = usePlaylistSearch(q || null, 8, Boolean(q));
+  const [openingPlaylist, setOpeningPlaylist] = useState<string | null>(null);
 
   const go = (value: string) => {
     const v = value.trim();
@@ -51,6 +53,18 @@ export default function Search() {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     go(draft);
+  };
+
+  const openPlaylist = async (id: string) => {
+    if (openingPlaylist) return;
+    setOpeningPlaylist(id);
+    try {
+      const data = await api.playlist(id);
+      const local = lib.createPlaylist(data.title || "قائمة YouTube", data.tracks, data.id);
+      navigate(`/playlist/${local.id}`);
+    } finally {
+      setOpeningPlaylist(null);
+    }
   };
 
   const tracks = results.data ?? [];
@@ -124,6 +138,32 @@ export default function Search() {
             </div>
           ) : (
             <>
+              {(playlistResults.data ?? []).length > 0 && (
+                <section className="section search-playlists">
+                  <div className="section-head">
+                    <h2>قوائم تشغيل من YouTube</h2>
+                  </div>
+                  <div className="playlist-search-grid">
+                    {(playlistResults.data ?? []).map(item => (
+                      <button
+                        key={item.id}
+                        className="playlist-search-card"
+                        onClick={() => void openPlaylist(item.id)}
+                        disabled={openingPlaylist !== null}
+                      >
+                        <div className="playlist-search-art">
+                          <img src={item.thumbnail} alt="" loading="lazy" />
+                          {openingPlaylist === item.id && <span className="playlist-search-loading">…</span>}
+                        </div>
+                        <strong className="clamp-2">{item.title}</strong>
+                        <span className="muted clamp-1">
+                          {item.channel || "قائمة YouTube"}{item.videoCount ? ` • ${item.videoCount}` : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
               <button className="top-result" onClick={() => player.playTrack(tracks[0], tracks, `بحث: ${q}`)}>
                 <div className="art">
                   <img src={tracks[0].thumbnail} alt="" />
