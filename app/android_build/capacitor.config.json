@@ -1,0 +1,12 @@
+{
+  "appId": "com.ymusic.player",
+  "appName": "YMusic",
+  "webDir": "../dist/public",
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "showSpinner": false
+    }
+  }
+}

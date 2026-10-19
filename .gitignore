@@ -1,0 +1,9 @@
+node_modules/
+dist/
+public/
+.gradle/
+**/build/
+*.log
+.env
+.env.*
+.DS_Store
